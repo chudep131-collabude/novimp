@@ -29,6 +29,14 @@ export class SyncController {
     @Param('id') providerId: string,
     @Query('type') type?: string,
   ) {
+    if (process.env.NODE_ENV === 'development' || !process.env.REDIS_URL || process.env.REDIS_URL.includes('localhost')) {
+      // Local dev without Redis: run inline but don't await to avoid timeout
+      this.syncService.syncProvider(providerId, type || 'all').catch((err) => {
+        console.error('Local sync failed:', err);
+      });
+      return { success: true, queued: true, note: 'Ran inline (no local Redis)' };
+    }
+
     // Enqueue the sync job — do NOT await inline; a full catalog sync takes
     // 30-60 s and would always exceed the client's 8 s HTTP timeout.
     await this.queueService.enqueueProviderSync(providerId, type || 'all');
