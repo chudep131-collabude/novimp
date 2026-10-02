@@ -29,8 +29,8 @@ function initials(email?: string, first?: string, last?: string) {
   return email?.slice(0, 2).toUpperCase() ?? 'U';
 }
 
-const mainNav = navigation.slice(0, 7); // Home → Email
-const accountNav = navigation.slice(7); // Support, Notifications, Account
+const mainNav = navigation.slice(0, 6); // Home → SMM
+const accountNav = navigation.slice(6); // Support, Profile
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,25 +52,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <ThemeLogo width={32} height={32} className="rounded-lg" />
               <span className="text-[17px] font-bold tracking-tight">NoviMP</span>
             </Link>
-
-            {/* Desktop main navigation */}
-            <nav className="hidden lg:flex items-center gap-1 ml-6">
-              {mainNav.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                      isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                    )}
-                  >
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
 
             <div className="flex-1" />
 
