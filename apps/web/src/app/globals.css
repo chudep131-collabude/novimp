@@ -1,0 +1,390 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Light theme ───────────────────────────────────────────────────────
+       Professional, clean design with brand orange-red as accent.
+       Depth through subtle shadows and border contrast.
+    ────────────────────────────────────────────────────────────────────── */
+
+    --background: 220 20% 96%;           /* #F1F4F9 — visible cool gray canvas */
+    --foreground: 222 47% 11%;        /* #0F172A slate-900 text */
+
+    --card: 0 0% 100%;                /* white cards — slightly transparent via CSS below */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Brand Primary - Rich orange-red */
+    --primary: 10 100% 55%;           /* #FF4314 */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 10 95% 48%;
+
+    /* Secondary - Subtle slate */
+    --secondary: 215 20% 95%;         /* #F1F5F9 slate-100 */
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted - For backgrounds and subtle UI */
+    --muted: 215 20% 91%;             /* #E2E9F2 — visible muted bg */
+    --muted-foreground: 215 16% 42%;  /* #566A84 — stronger secondary text */
+
+    /* Accent - Primary with reduced saturation */
+    --accent: 215 20% 95%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;         /* #EF4444 red-500 */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 215 20% 88%;
+    --input: 215 20% 82%;
+    --ring: 10 100% 55%;
+
+    /* Radius */
+    --radius: 0.75rem;
+    --radius-card: 16px;
+    --radius-control: 12px;
+    --radius-pill: 9999px;
+
+    /* Semantic Colors */
+    --success: 142 71% 45%;           /* #16A34A green-600 */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;            /* #F59E0B amber-500 */
+    --warning-foreground: 222 47% 11%;
+    --info: 199 89% 48%;              /* #0EA5E9 sky-500 */
+    --info-foreground: 0 0% 100%;
+
+    /* Surface layers for depth */
+    --surface-1: 0 0% 100%;
+    --surface-2: 215 20% 97%;         /* #F8FAFC slate-50 */
+    --surface-3: 215 16% 93%;
+
+    /* Sidebar */
+    --sidebar-width: 240px;
+    --sidebar-width-collapsed: 72px;
+
+    /* Professional shadows - visible depth */
+    --shadow-sm:   0 1px 2px rgb(0 0 0 / 0.06),
+                   0 1px 3px rgb(0 0 0 / 0.10);
+
+    /* Semi-3D card: top specular + bottom thickness edge + layered ambient */
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.90) inset,      /* top specular highlight */
+                   0 -2px 0 rgb(0 0 0 / 0.08) inset,           /* bottom thickness edge  */
+                   0 1px 3px rgb(0 0 0 / 0.07),
+                   0 4px 12px rgb(0 0 0 / 0.07),
+                   0 12px 24px rgb(0 0 0 / 0.04);
+
+    --shadow-card-hover:
+                   0 1px 0 rgb(255 255 255 / 0.95) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.10) inset,
+                   0 4px 8px rgb(0 0 0 / 0.08),
+                   0 12px 28px rgb(0 0 0 / 0.09),
+                   0 24px 48px rgb(0 0 0 / 0.05);
+
+    --shadow-lg:   0 1px 0 rgb(255 255 255 / 0.85) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.10) inset,
+                   0 8px 24px rgb(0 0 0 / 0.12),
+                   0 20px 40px rgb(0 0 0 / 0.08);
+
+    /* Colored glow — applied via inline style or utility, picks up brand color */
+    --shadow-card-glow:
+                   0 1px 0 rgb(255 255 255 / 0.90) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.08) inset,
+                   0 4px 12px hsl(var(--primary) / 0.12),
+                   0 12px 28px hsl(var(--primary) / 0.08),
+                   0 1px 3px rgb(0 0 0 / 0.06);
+
+    /* 3D button: raised slab with bottom-edge depth */
+    --shadow-btn:  0 1px 0 rgb(255 255 255 / 0.30) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.22) inset,
+                   0 2px 4px rgb(0 0 0 / 0.14),
+                   0 4px 8px rgb(0 0 0 / 0.08);
+
+    --shadow-btn-hover:
+                   0 1px 0 rgb(255 255 255 / 0.35) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.28) inset,
+                   0 4px 10px rgb(0 0 0 / 0.16),
+                   0 8px 20px rgb(0 0 0 / 0.10);
+
+    --shadow-btn-active:
+                   0 1px 0 rgb(0 0 0 / 0.10) inset,
+                   0 -1px 0 rgb(255 255 255 / 0.08) inset,
+                   0 1px 2px rgb(0 0 0 / 0.10);
+  }
+
+  .dark {
+    /* ── Dark theme ────────────────────────────────────────────────────────
+       Background is deep navy, cards float clearly above it.
+    ────────────────────────────────────────────────────────────────────── */
+    --background: 222 47% 9%;         /* deep navy — distinct canvas */
+    --foreground: 210 20% 98%;
+
+    --card: 222 40% 16%;              /* clearly lighter than bg */
+    --card-foreground: 210 20% 98%;
+
+    --popover: 222 40% 19%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Brand Primary */
+    --primary: 10 95% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 10 95% 55%;
+
+    /* Secondary */
+    --secondary: 217 19% 24%;
+    --secondary-foreground: 210 20% 98%;
+
+    /* Muted */
+    --muted: 217 19% 24%;
+    --muted-foreground: 215 16% 65%;
+
+    /* Accent */
+    --accent: 217 19% 24%;
+    --accent-foreground: 210 20% 98%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders — match card so edges are invisible */
+    --border: 222 40% 16%;            /* = --card */
+    --input: 217 25% 24%;    --ring: 10 95% 60%;
+
+    /* Semantic Colors */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 85% 55%;
+    --warning-foreground: 222 47% 11%;
+    --info: 199 85% 55%;
+    --info-foreground: 0 0% 100%;
+
+    /* Surface layers */
+    --surface-1: 222 40% 16%;
+    --surface-2: 222 38% 21%;
+    --surface-3: 222 35% 27%;
+
+    /* Shadows — 3D depth for dark surfaces */
+    --shadow-sm:   0 1px 2px rgb(0 0 0 / 0.30);
+
+    --shadow-card: 0 1px 0 rgb(255 255 255 / 0.06) inset,   /* subtle top highlight */
+                   0 -1px 0 rgb(0 0 0 / 0.30) inset,        /* bottom depth line */
+                   0 2px 8px rgb(0 0 0 / 0.40),
+                   0 8px 24px rgb(0 0 0 / 0.25);
+
+    --shadow-card-hover:
+                   0 1px 0 rgb(255 255 255 / 0.10) inset,
+                   0 -1px 0 rgb(0 0 0 / 0.35) inset,
+                   0 8px 20px rgb(0 0 0 / 0.50),
+                   0 20px 40px rgb(0 0 0 / 0.30);
+
+    --shadow-lg:   0 1px 0 rgb(255 255 255 / 0.07) inset,
+                   0 16px 40px rgb(0 0 0 / 0.55),
+                   0 6px 12px rgb(0 0 0 / 0.35);
+
+    --shadow-btn:  0 1px 0 rgb(255 255 255 / 0.12) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.35) inset,
+                   0 2px 6px rgb(0 0 0 / 0.40);
+
+    --shadow-btn-hover:
+                   0 1px 0 rgb(255 255 255 / 0.15) inset,
+                   0 -2px 0 rgb(0 0 0 / 0.40) inset,
+                   0 4px 10px rgb(0 0 0 / 0.45);
+
+    --shadow-btn-active:
+                   0 1px 0 rgb(0 0 0 / 0.20) inset,
+                   0 -1px 0 rgb(255 255 255 / 0.05) inset,
+                   0 1px 3px rgb(0 0 0 / 0.30);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  .app-bg {
+    position: relative;
+    background-color: hsl(var(--background));
+  }
+
+  .app-bg::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image: url('/images/landing light.png');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    filter: blur(3px);
+    transform: scale(1.04); /* prevents blur edges showing white */
+    pointer-events: none;
+  }
+
+  .dark .app-bg::before {
+    background-image: url('/images/landing.png');
+  }
+
+  /* Ensure all direct children sit above the blurred pseudo-element */
+  .app-bg > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Glass cards — let background image show through */
+  .app-bg .rounded-card {
+    background-color: rgb(255 255 255 / 0.80) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-color: transparent !important;
+    box-shadow: var(--shadow-card);
+  }
+
+  .dark .app-bg .rounded-card {
+    background-color: hsl(222 47% 14% / 0.80) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-color: transparent !important;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Non-glass cards also get 3D shadow */
+  .rounded-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar        { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track  { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb  { @apply rounded-full bg-border; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/50; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* ── 3D lift — apply to any interactive surface ────────────────────── */
+  .lift {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: var(--shadow-card);
+  }
+  .lift:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .lift:active {
+    transform: translateY(0) scale(0.998);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── 3D buttons — raised slab with bottom-edge depth ───────────────── */
+  .btn-3d {
+    box-shadow: var(--shadow-btn);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .btn-3d:hover {
+    box-shadow: var(--shadow-btn-hover);
+    transform: translateY(-1px);
+  }
+  .btn-3d:active {
+    box-shadow: var(--shadow-btn-active);
+    transform: translateY(1px);
+  }
+
+  /* ── 3D icon badges ─────────────────────────────────────────────────── */
+  .icon-3d {
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.35) inset,
+      0 -1px 0 rgb(0 0 0 / 0.15) inset,
+      0 2px 4px rgb(0 0 0 / 0.12);
+  }
+  .dark .icon-3d {
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.12) inset,
+      0 -1px 0 rgb(0 0 0 / 0.30) inset,
+      0 2px 6px rgb(0 0 0 / 0.35);
+  }
+
+  /* ── Glass effect for navigation ───────────────────────────────────── */
+  .glass {
+    @apply bg-background/90 backdrop-blur-md;
+    border-bottom: 0.2px solid hsl(var(--border) / 0.5);
+  }
+
+  /* ── Card shadows ──────────────────────────────────────────────────── */
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  .card-shadow-hover:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* ── Brand gradient (subtle, no glow) ──────────────────────────────── */
+  .brand-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.04) 0%,
+      hsl(var(--primary) / 0.02) 100%
+    );
+  }
+
+  .brand-gradient-strong {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary-hover)) 100%
+    );
+  }
+
+  /* ── Semantic text colors ──────────────────────────────────────────── */
+  .text-success  { color: hsl(var(--success)); }
+  .text-warning  { color: hsl(var(--warning)); }
+  .text-info     { color: hsl(var(--info)); }
+  .bg-success    { background-color: hsl(var(--success)); }
+  .bg-warning    { background-color: hsl(var(--warning)); }
+  .tabular-nums  { font-variant-numeric: tabular-nums; }
+
+  /* ── Sidebar utilities ─────────────────────────────────────────────── */
+  .sidebar-width           { width: var(--sidebar-width); }
+  .sidebar-width-collapsed { width: var(--sidebar-width-collapsed); }
+  .ml-sidebar              { margin-left: var(--sidebar-width); }
+  .ml-sidebar-collapsed    { margin-left: var(--sidebar-width-collapsed); }
+
+  /* ── Animation ─────────────────────────────────────────────────────── */
+  .animate-in-fast { animation: fade-in 0.2s ease-out both; }
+  /* ── Active nav item (no glow) ─────────────────────────────────────── */
+  .nav-active {
+    @apply text-primary-foreground bg-primary;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+  /* ── Marquee / infinite scroll ─────────────────────────────────── */
+  @keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    display: flex;
+    animation: marquee 22s linear infinite;
+    will-change: transform;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }

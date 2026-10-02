@@ -1,0 +1,23 @@
+{
+  "name": "@marketplace/worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "bullmq": "^5.12.0",
+    "ioredis": "^5.4.0",
+    "winston": "^3.14.0",
+    "@prisma/client": "^5.19.0",
+    "@prisma/adapter-pg": "^5.19.0",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.16.0",
+    "@types/node": "^22.5.0"
+  }
+}

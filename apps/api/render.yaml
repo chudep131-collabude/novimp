@@ -1,0 +1,98 @@
+services:
+  # ── NestJS API ────────────────────────────────────────────────────────────
+  - type: web
+    name: novimp-api
+    runtime: node
+    region: oregon
+    plan: starter
+    rootDir: apps/api
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Neon PostgreSQL — paste your Neon connection string here
+      # Format: postgresql://user:pass@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+
+      # Redis (Render-managed)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: novimp-redis
+          property: connectionString
+
+      # JWT — auto-generated strong secrets
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRATION
+        value: 15m
+      - key: JWT_REFRESH_EXPIRATION
+        value: 7d
+
+      # Encryption — must be exactly 32 characters
+      - key: ENCRYPTION_KEY
+        generateValue: true
+
+      # App URLs
+      - key: API_PORT
+        value: 4000
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+      # Email (Resend — https://resend.com)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: RESEND_FROM_NAME
+        value: NoviMP
+
+      # Telegram
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_IDS
+        sync: false
+
+      # Heleket crypto payments
+      - key: HELEKET_MERCHANT_ID
+        sync: false
+      - key: HELEKET_PAYMENT_KEY
+        sync: false
+      - key: HELEKET_API_URL
+        value: https://api.heleket.com
+
+      # Providers
+      - key: AUTOSMO_API_KEY
+        sync: false
+      - key: AUTOSMO_API_URL
+        value: https://autosmo.com/api/v2
+      - key: PROXYSELLER_API_KEY
+        sync: false
+      - key: PROXYSELLER_API_URL
+        value: https://proxy-seller.com/personal/api/v1
+      - key: ONLINESIM_API_KEY
+        sync: false
+      - key: ONLINESIM_API_URL
+        value: https://onlinesim.io
+
+      - key: LOG_LEVEL
+        value: info
+
+  # ── Redis (BullMQ queues) ─────────────────────────────────────────────────
+  - type: redis
+    name: novimp-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+# NOTE: No Render Postgres block — using Neon PostgreSQL instead.
+# Set DATABASE_URL in the API service env vars above.

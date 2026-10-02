@@ -1,0 +1,549 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  firstName     String?   @map("first_name")
+  lastName      String?   @map("last_name")
+  avatarUrl     String?   @map("avatar_url")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  status        UserStatus @default(ACTIVE)
+  role          UserRole   @default(CUSTOMER)
+  kycStatus     KycStatus  @default(PENDING) @map("kyc_status")
+
+  // Telegram Integration
+  telegramId       String?   @unique @map("telegram_id")
+  telegramUsername String?   @map("telegram_username")
+
+  // Email verification (OTP)
+  emailOtp       String?   @map("email_otp")
+  emailOtpExpiry DateTime? @map("email_otp_expiry")
+
+  // Password reset (OTP  same delivery mechanism as email verification)
+  passwordResetToken  String?   @map("password_reset_token")
+  passwordResetExpiry DateTime? @map("password_reset_expiry")
+
+  // Security
+  failedLoginAttempts Int @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+  lastLoginAt         DateTime? @map("last_login_at")
+  lastLoginIp         String?   @map("last_login_ip")
+  deviceFingerprint   String?   @map("device_fingerprint")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Relations
+  wallet       Wallet?
+  orders       Order[]
+  sessions     Session[]
+  tickets      SupportTicket[]
+  auditLogs    AuditLog[]
+  transactions WalletTransaction[]
+  ticketMessages TicketMessage[]
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  token        String   @unique
+  refreshToken String?  @unique @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  refreshExpiresAt DateTime? @map("refresh_expires_at")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  revokedAt    DateTime? @map("revoked_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  balance   Decimal  @default(0) @db.Decimal(18, 8)
+  currency  String   @default("USD")
+  status    WalletStatus @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@index([userId])
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id              String   @id @default(cuid())
+  walletId        String   @map("wallet_id")
+  userId          String   @map("user_id")
+  type            TransactionType
+  amount          Decimal  @db.Decimal(18, 8)
+  balanceAfter    Decimal  @map("balance_after") @db.Decimal(18, 8)
+  currency        String   @default("USD")
+  description     String?
+  referenceType   String?  @map("reference_type") // order, deposit, refund, adjustment
+  referenceId     String?  @map("reference_id")
+  idempotencyKey  String   @unique @map("idempotency_key")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([userId])
+  @@index([idempotencyKey])
+  @@index([referenceId])
+  @@index([createdAt])
+  @@map("wallet_transactions")
+}
+
+model Provider {
+  id            String   @id @default(cuid())
+  name          String   @unique // AutoSMO, OnlineProxy, OnlineSIM
+  displayName   String   @map("display_name")
+  adapterType   String   @map("adapter_type")
+  apiUrl        String   @map("api_url")
+  apiKey        String   @map("api_key") // encrypted
+  apiKeyIv      String   @map("api_key_iv") // IV for decryption
+  balance       Decimal? @db.Decimal(18, 8)
+  currency      String?
+  status        ProviderStatus @default(ACTIVE)
+  lastSyncAt    DateTime? @map("last_sync_at")
+  lastSyncError String?   @map("last_sync_error")
+  syncEnabled   Boolean   @default(true) @map("sync_enabled")
+  syncInterval  Int       @default(300) @map("sync_interval") // seconds
+  consecutiveFailures Int @default(0) @map("consecutive_failures")
+  avgResponseMs Int?      @map("avg_response_ms")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  services      Service[]
+  syncJobs      SyncJob[]
+  orders        Order[]
+
+  @@index([status])
+  @@index([name])
+  @@map("providers")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  providerId  String   @map("provider_id")
+  externalId  String   @map("external_id") // provider's service ID
+  name        String
+  description String?
+  category    ServiceCategory
+  subcategory String?
+  platform    String?  // Instagram, TikTok, etc. for SMM
+
+  // Pricing (provider cost)
+  providerPrice     Decimal  @map("provider_price") @db.Decimal(18, 8)
+  providerMinQty    Int      @default(1) @map("provider_min_qty")
+  providerMaxQty    Int?     @map("provider_max_qty")
+  providerCurrency  String   @default("USD") @map("provider_currency")
+
+  // Customer pricing (with markup applied)
+  customerPrice     Decimal  @map("customer_price") @db.Decimal(18, 8)
+  customerMinQty  Int      @default(1) @map("customer_min_qty")
+  customerMaxQty  Int?     @map("customer_max_qty")
+  currency        String   @default("USD")
+
+  // Overrides
+  priceOverride     Decimal? @map("price_override") @db.Decimal(18, 8)
+  markupPercent     Decimal? @map("markup_percent") @db.Decimal(5, 2)
+
+  // Availability
+  isAvailable   Boolean   @default(true) @map("is_available")
+  inStock       Boolean   @default(true) @map("in_stock")
+  stockQuantity Int?      @map("stock_quantity")
+
+  // Metadata
+  countries     Json?     // [{code, name, available}]
+  features      Json?     // service-specific features
+  estimatedTime String?   @map("estimated_time")
+
+  status        ServiceStatus @default(ACTIVE)
+  lastSyncedAt  DateTime  @map("last_synced_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  orders   Order[]
+
+  @@unique([providerId, externalId])
+  @@index([category])
+  @@index([platform])
+  @@index([status])
+  @@index([isAvailable])
+  @@map("services")
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique @map("order_number") // human-readable
+  userId          String   @map("user_id")
+  serviceId       String   @map("service_id")
+  providerId      String   @map("provider_id")
+
+  // Provider reference
+  providerOrderId String?  @map("provider_order_id")
+
+  // Pricing snapshot
+  quantity        Int
+  providerCost    Decimal  @map("provider_cost") @db.Decimal(18, 8)
+  customerPrice   Decimal  @map("customer_price") @db.Decimal(18, 8)
+  totalAmount     Decimal  @map("total_amount") @db.Decimal(18, 8)
+  profit          Decimal  @db.Decimal(18, 8)
+  currency        String   @default("USD")
+
+  // Order details
+  targetUrl       String?  @map("target_url")
+  targetUsername  String?  @map("target_username")
+  customData      Json?    @map("custom_data") // provider-specific params
+
+  // Status
+  status          OrderStatus @default(PENDING)
+  statusHistory   Json?      @map("status_history") // [{status, at, reason}]
+
+  // Delivery
+  deliveryData    Json?      @map("delivery_data") // proxies, numbers, etc.
+  startedAt       DateTime?  @map("started_at")
+  completedAt     DateTime?  @map("completed_at")
+  cancelledAt     DateTime?  @map("cancelled_at")
+  refundedAt      DateTime?  @map("refunded_at")
+  refundAmount    Decimal?   @map("refund_amount") @db.Decimal(18, 8)
+
+  // Idempotency
+  idempotencyKey  String     @unique @map("idempotency_key")
+
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  service  Service  @relation(fields: [serviceId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([providerId])
+  @@index([createdAt])
+  @@index([orderNumber])
+  @@map("orders")
+}
+
+model Deposit {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  amount          Decimal  @db.Decimal(18, 8)
+  currency        String   @default("USD")
+
+  // Payment
+  gateway         String   // stripe, crypto, bank_transfer
+  gatewayTransactionId String? @map("gateway_transaction_id")
+  paymentMethod   String?  @map("payment_method")
+
+  // Status
+  status          DepositStatus @default(PENDING)
+
+  // Crypto-specific
+  cryptoAddress   String?  @map("crypto_address")
+  cryptoCurrency  String?  @map("crypto_currency")
+  cryptoAmount    Decimal? @map("crypto_amount") @db.Decimal(18, 8)
+  cryptoTxHash    String?  @map("crypto_tx_hash")
+  confirmations   Int?      @default(0)
+  requiredConfirmations Int? @map("required_confirmations")
+
+  // Over/under payment
+  expectedAmount  Decimal? @map("expected_amount") @db.Decimal(18, 8)
+  receivedAmount  Decimal? @map("received_amount") @db.Decimal(18, 8)
+  overpaidAmount  Decimal? @map("overpaid_amount") @db.Decimal(18, 8)
+  underpaidAmount Decimal? @map("underpaid_amount") @db.Decimal(18, 8)
+
+  // Manual review
+  requiresReview  Boolean  @default(false) @map("requires_review")
+  reviewReason    String?  @map("review_reason")
+  reviewedBy      String?  @map("reviewed_by")
+  reviewedAt      DateTime? @map("reviewed_at")
+  reviewNotes     String?  @map("review_notes")
+
+  // Webhook
+  providerEventId String? @unique @map("provider_event_id")
+  webhookPayload  Json?    @map("webhook_payload")
+  metadata        Json?
+
+  idempotencyKey  String   @unique @map("idempotency_key")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([gateway])
+  @@index([providerEventId])
+  @@map("deposits")
+}
+
+model SyncJob {
+  id          String   @id @default(cuid())
+  providerId  String   @map("provider_id")
+  jobType     String   @map("job_type") // services, prices, inventory, all
+  status      SyncStatus @default(RUNNING)
+  startedAt   DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  itemsSynced Int?     @map("items_synced")
+  itemsFailed Int?     @map("items_failed")
+  errorMessage String? @map("error_message")
+  details     Json?
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("sync_jobs")
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  ticketNumber String  @unique @map("ticket_number")
+  userId      String   @map("user_id")
+  subject     String
+  description String
+  category    TicketCategory
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus @default(OPEN)
+  orderId     String?  @map("order_id")
+  assignedTo  String?  @map("assigned_to")
+  resolvedAt  DateTime? @map("resolved_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User              @relation(fields: [userId], references: [id])
+  messages TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String   @map("ticket_id")
+  userId    String?  @map("user_id") // null for system messages
+  content   String
+  isInternal Boolean @default(false) @map("is_internal")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@map("ticket_messages")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?  @map("user_id")
+  action      String   // pricing_override, wallet_adjustment, refund, etc.
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  oldValue    Json?    @map("old_value")
+  newValue    Json?    @map("new_value")
+  reason      String?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  type      AnnouncementType @default(INFO)
+  isActive  Boolean  @default(true) @map("is_active")
+  startsAt  DateTime? @map("starts_at")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("announcements")
+}
+
+model PricingRule {
+  id          String   @id @default(cuid())
+  name        String
+  ruleType    PricingRuleType @map("rule_type")
+  targetType  String   @map("target_type") // global, category, service, provider
+  targetId    String?  @map("target_id")
+  markupPercent Decimal @map("markup_percent") @db.Decimal(5, 2)
+  fixedAmount   Decimal? @map("fixed_amount") @db.Decimal(18, 8)
+  minPrice      Decimal? @map("min_price") @db.Decimal(18, 8)
+  maxPrice      Decimal? @map("max_price") @db.Decimal(18, 8)
+  isActive      Boolean  @default(true) @map("is_active")
+  priority      Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([targetType, targetId])
+  @@index([isActive])
+  @@map("pricing_rules")
+}
+
+// Enums
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING_VERIFICATION
+}
+
+enum UserRole {
+  CUSTOMER
+  SUPPORT
+  FINANCE
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  REQUIRED
+}
+
+enum WalletStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum TransactionType {
+  DEPOSIT
+  PURCHASE
+  REFUND
+  ADJUSTMENT
+  BONUS
+  CHARGEBACK
+  WITHDRAWAL
+}
+
+enum ProviderStatus {
+  ACTIVE
+  PAUSED
+  ERROR
+  DISABLED
+}
+
+enum ServiceCategory {
+  SMM
+  PROXY
+  NUMBER
+  ESIM
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIAL
+}
+
+enum DepositStatus {
+  PENDING
+  CONFIRMING
+  COMPLETED
+  FAILED
+  CANCELLED
+  UNDERPAID
+  OVERPAID
+  MANUAL_REVIEW
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+enum TicketCategory {
+  GENERAL
+  ORDER_ISSUE
+  PAYMENT
+  ACCOUNT
+  TECHNICAL
+  REFUND
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  MAINTENANCE
+  PROMOTION
+}
+
+enum PricingRuleType {
+  MARKUP_PERCENT
+  MARKUP_FIXED
+  OVERRIDE
+}
