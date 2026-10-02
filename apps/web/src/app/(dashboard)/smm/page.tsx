@@ -273,7 +273,7 @@ export default function SMMPage() {
       {/* Navigation Breadcrumbs */}
       <StaggerItem>
         {!search && (selectedPlatform || selectedSubcategory) && (
-          <div className="flex flex-wrap items-center gap-2 pb-4 border-b">
+          <div className="flex max-w-full flex-wrap items-center gap-2 overflow-hidden pb-4 border-b">
             <Button
               variant="outline"
               size="sm"

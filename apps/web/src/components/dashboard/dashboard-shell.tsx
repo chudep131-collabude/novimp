@@ -40,7 +40,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="app-bg min-h-screen">
+      <div className="app-bg min-h-screen overflow-x-hidden">
         {/* ── Top bar ────────────────────────────────────────────────────── */}
         <header className="sticky top-0 z-40 h-16 border-b border-border/50 bg-card/95 backdrop-blur-md">
           <div className="mx-auto flex h-full max-w-7xl items-center gap-3 px-4 lg:px-6">
@@ -189,7 +189,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduceMotion ? 0 : -3 }}
             transition={{ duration: reduceMotion ? 0 : 0.15, ease: EASE_OUT }}
-            className="mx-auto max-w-7xl p-4 pb-28 lg:p-6 lg:pb-8"
+            className="mx-auto max-w-7xl overflow-x-hidden p-4 pb-28 lg:p-6 lg:pb-8"
           >
             {children}
           </motion.main>
