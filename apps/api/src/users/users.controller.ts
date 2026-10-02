@@ -87,6 +87,13 @@ export class UsersController {
     return this.usersService.updateUserRole(actorId, actorRole, targetId, role, reason);
   }
 
+  @Get(':id')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'SUPPORT')
+  @UseGuards(RolesGuard)
+  async getUserById(@Param('id') id: string) {
+    return this.usersService.findById(id);
+  }
+
   /** PATCH /users/me/telegram — link Telegram via initData */
   @Patch('me/telegram')
   @HttpCode(HttpStatus.OK)
