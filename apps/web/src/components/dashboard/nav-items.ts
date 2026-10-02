@@ -37,7 +37,6 @@ export const navigation: NavItem[] = [
   { name: 'Orders',   href: '/orders',  icon: ClipboardList },
   { name: 'Proxy',    href: '/proxy',   icon: Network },
   { name: 'Numbers',  href: '/numbers', icon: Smartphone },
-  { name: 'SMM',      href: '/smm',     icon: BarChart3 },
   { name: 'Email',    href: '/email',   icon: AtSign },
   { name: 'Support',       href: '/support',        icon: MessageCircleQuestion },
   { name: 'Notifications', href: '/notifications',   icon: Bell },
