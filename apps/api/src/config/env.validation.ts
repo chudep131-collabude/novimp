@@ -6,7 +6,8 @@ class EnvironmentVariables {
   DATABASE_URL: string;
 
   @IsString()
-  REDIS_URL: string;
+  @IsOptional()
+  REDIS_URL?: string = 'redis://localhost:6379';
 
   @IsString()
   JWT_SECRET: string;
