@@ -107,7 +107,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   aria-label="User menu"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.avatarUrl ?? ''} alt="Profile" />
+                    <AvatarImage
+                      src={user?.avatarUrl || '/avatar-icon.png'}
+                      alt="Profile"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/avatar-icon.png'; }}
+                    />
                     <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                       {initials(user?.email, user?.firstName, user?.lastName)}
                     </AvatarFallback>
@@ -193,7 +197,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
         {/* ── Mobile bottom nav ──────────────────────────────────────────── */}
         <nav
-          className="fixed bottom-0 left-0 right-0 z-30 flex h-20 items-stretch border-t border-border/50 bg-card/98 backdrop-blur-md lg:hidden"
+          className="fixed bottom-0 left-0 right-0 z-30 flex h-[4.25rem] items-stretch border-t border-border/50 bg-card/98 backdrop-blur-md lg:hidden safe-area-inset-bottom"
           aria-label="Bottom navigation"
         >
           {([
@@ -210,7 +214,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'relative flex flex-1 flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors',
+                  'relative flex flex-1 flex-col items-center justify-center gap-0.5 pt-1 text-[10px] font-semibold transition-colors',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
@@ -224,11 +228,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <motion.span
                   animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
                   transition={reduceMotion ? { duration: 0 } : springSoft}
-                  className="flex h-6 items-center justify-center"
+                  className="flex h-6 w-6 items-center justify-center"
                 >
-                  <item.icon className="h-6 w-6" />
+                  <item.icon className="h-5 w-5" />
                 </motion.span>
-                <span>{item.name}</span>
+                <span className="leading-none">{item.name}</span>
               </Link>
             );
           })}

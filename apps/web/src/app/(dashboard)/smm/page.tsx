@@ -192,7 +192,7 @@ export default function SMMPage() {
       );
     }
     return (
-      <StaggerList className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <StaggerList className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((service) => {
           const colors = platformColors[service.platform ?? 'Other'] ?? platformColors.Other;
           return (
@@ -254,7 +254,7 @@ export default function SMMPage() {
                 placeholder="Search services..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 w-full"
                 aria-label="Search services"
               />
             </div>
@@ -265,7 +265,7 @@ export default function SMMPage() {
       {/* Navigation Breadcrumbs */}
       <StaggerItem>
         {!search && (selectedPlatform || selectedSubcategory) && (
-          <div className="flex items-center gap-2 pb-4 border-b">
+          <div className="flex flex-wrap items-center gap-2 pb-4 border-b">
             <Button
               variant="outline"
               size="sm"
@@ -282,16 +282,17 @@ export default function SMMPage() {
                 variant={selectedSubcategory ? 'outline' : 'default'}
                 size="sm"
                 onClick={() => setSelectedSubcategory(null)}
+                className="max-w-[160px] truncate"
               >
-                <PlatformIcon platform={selectedPlatform} className="mr-2 h-4 w-4" />
-                {selectedPlatform}
+                <PlatformIcon platform={selectedPlatform} className="mr-2 h-4 w-4 shrink-0" />
+                <span className="truncate">{selectedPlatform}</span>
               </Button>
             )}
             {selectedSubcategory && (
               <>
                 <span className="text-muted-foreground">/</span>
-                <Button variant="default" size="sm">
-                  {selectedSubcategory}
+                <Button variant="default" size="sm" className="max-w-[160px] truncate">
+                  <span className="truncate">{selectedSubcategory}</span>
                 </Button>
               </>
             )}
@@ -314,21 +315,21 @@ export default function SMMPage() {
           renderServicesGrid()
         ) : !selectedPlatform ? (
           // Step 1: Select Platform
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
             {platforms.map((p) => {
               const colors = platformColors[p.platform] ?? platformColors.Other;
               return (
                 <button
                   key={p.platform}
                   onClick={() => setSelectedPlatform(p.platform)}
-                  className={`group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-4 text-center transition-all duration-200 hover:border-transparent hover:shadow-card-hover hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-2 ring-transparent ${colors.ring}`}
+                  className={`group flex flex-col items-center gap-2 sm:gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4 text-center transition-all duration-200 hover:border-transparent hover:shadow-card-hover hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-2 ring-transparent ${colors.ring}`}
                 >
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${colors.bg} transition-transform duration-200 group-hover:scale-110`}>
-                    <PlatformIcon platform={p.platform} className="h-7 w-7" />
+                  <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${colors.bg} transition-transform duration-200 group-hover:scale-110`}>
+                    <PlatformIcon platform={p.platform} className="h-6 w-6 sm:h-7 sm:w-7" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold">{p.platform}</div>
-                    <div className="text-xs text-muted-foreground">{p.count} services</div>
+                    <div className="text-xs sm:text-sm font-semibold truncate max-w-[80px] sm:max-w-none">{p.platform}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">{p.count} services</div>
                   </div>
                 </button>
               );
@@ -336,19 +337,19 @@ export default function SMMPage() {
           </div>
         ) : !selectedSubcategory ? (
           // Step 2: Select Subcategory
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2 sm:gap-3 sm:grid-cols-2">
             {subcategories.map((sub) => (
               <button
                 key={sub.sub}
                 type="button"
                 onClick={() => setSelectedSubcategory(sub.sub)}
-                className="group flex items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 text-left transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group flex items-center gap-3 sm:gap-4 rounded-2xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4 text-left transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
                   <PlatformIcon platform={selectedPlatform} className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{sub.sub.replace(/&amp;/g, '&')}</p>
+                  <p className="font-semibold truncate text-sm sm:text-base">{sub.sub.replace(/&amp;/g, '&')}</p>
                   <p className="text-xs text-muted-foreground">{sub.count} services</p>
                 </div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden />

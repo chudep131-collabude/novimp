@@ -29,6 +29,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { ServiceSpecs } from '@/components/service-specs';
 import { CountryFlag } from '@/components/country-flag';
+import { PlatformIcon } from '@/components/platform-icon';
 import { StaggerList, StaggerItem } from '@/components/motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -368,9 +369,7 @@ function ServiceCard({
                   onError={() => setImgFailed(true)}
                 />
               ) : (
-                <span className="select-none text-lg font-bold text-primary">
-                  {svc.name.charAt(0).toUpperCase()}
-                </span>
+                <PlatformIcon platform={svc.name} className="h-7 w-7" />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -926,7 +925,7 @@ function NumbersPageInner() {
               <div className="sm:hidden">
                 <Select
                   value={selectedCountry ?? ''}
-                  onValueChange={(code) => { setSelectedCountry(code); setSelectedServiceId(null); setServiceSearch(''); }}
+                  onValueChange={(code) => { setSelectedCountry(code); setServiceSearch(''); }}
                 >
                   <SelectTrigger className="w-full h-11 rounded-xl">
                     <div className="flex items-center gap-2">
@@ -960,7 +959,6 @@ function NumbersPageInner() {
                   selected={selectedCountry}
                   onSelect={(code) => {
                     setSelectedCountry(code);
-                    setSelectedServiceId(null);
                     setServiceSearch('');
                   }}
                   isLoading={servicesQuery.isLoading}

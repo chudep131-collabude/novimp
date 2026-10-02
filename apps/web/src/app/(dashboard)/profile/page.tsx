@@ -70,6 +70,20 @@ function initials(user: ProfileUser): string {
   return (a + b).toUpperCase() || user.email[0]?.toUpperCase() || '?';
 }
 
+/**
+ * Returns true for auto-generated synthetic emails created by Telegram login
+ * (e.g. tg_12345@telegram.local). These don't represent a real inbox so
+ * email verification status is meaningless for them.
+ */
+function isSyntheticEmail(email?: string | null): boolean {
+  if (!email) return true;
+  return (
+    email.endsWith('.local') ||
+    email.includes('@telegram.') ||
+    /^tg_\d+@/.test(email)
+  );
+}
+
 /* ── DiceBear avatar catalog ──────────────────────────────────────── */
 
 const AVATAR_SEEDS = [
@@ -520,9 +534,16 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-foreground" aria-hidden />
-                <span className="text-sm font-medium">Email Verification</span>
+                <div>
+                  <span className="text-sm font-medium">Email Verification</span>
+                  {isSyntheticEmail(user.email) && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Telegram login — no email on file</p>
+                  )}
+                </div>
               </div>
-              {user.emailVerified ? (
+              {isSyntheticEmail(user.email) ? (
+                <Badge variant="secondary">N/A</Badge>
+              ) : user.emailVerified ? (
                 <Badge variant="success">Verified</Badge>
               ) : (
                 <Badge variant="warning">Pending</Badge>
