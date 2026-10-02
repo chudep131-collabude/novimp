@@ -38,7 +38,7 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
-  timeout: 60000,
+  timeout: 600000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -69,7 +69,7 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const response = await axios.post('/api/auth/refresh', { refreshToken });
+        const response = await api.post('/auth/refresh', { refreshToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
         localStorage.setItem('accessToken', accessToken);
