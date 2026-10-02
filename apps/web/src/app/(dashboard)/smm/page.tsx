@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { Search, BarChart3, ClipboardList, Minus, Plus, Loader2, Check, ChevronRight } from 'lucide-react';
-import { useServices, useCreateOrder } from '@/lib/queries';
+import Link from 'next/link';
+import { Search, BarChart3, ClipboardList, Minus, Plus, Loader2, Check, ChevronRight, AlertTriangle } from 'lucide-react';
+import { useServices, useCreateOrder, useWallet } from '@/lib/queries';
+import { getErrorMessage } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import type { Service } from '@/lib/types';
 import type { Platform } from '@/lib/types';
@@ -85,6 +87,7 @@ export default function SMMPage() {
 
   const { data, isLoading, isError, error, refetch } = useServices('SMM', 2000);
   const createOrder = useCreateOrder();
+  const { data: wallet } = useWallet();
 
   const services: Service[] = data?.services ?? [];
 
@@ -153,6 +156,9 @@ export default function SMMPage() {
   const total = unitPrice * quantity;
   const quantityInvalid = quantity < minQty || (maxQty != null && quantity > maxQty);
 
+  const balance = wallet ? Number(wallet.balance) : null;
+  const hasInsufficientFunds = balance !== null && balance < total;
+
   /** Validate the target URL/username field. */
   const targetUrlError = (() => {
     const val = targetUrl.trim();
@@ -172,12 +178,14 @@ export default function SMMPage() {
   })();
 
   const handleOrder = () => {
-    if (!selectedService || quantityInvalid || targetUrlError) return;
+    if (!selectedService || quantityInvalid || targetUrlError || hasInsufficientFunds) return;
     createOrder.mutate(
       { serviceId: selectedService.id, quantity, targetUrl: targetUrl.trim() },
       { onSuccess: closeOrder }
     );
   };
+
+  const apiErrorMsg = createOrder.isError ? getErrorMessage(createOrder.error) : null;
 
   const renderServicesGrid = () => {
     if (filtered.length === 0) {
@@ -322,7 +330,7 @@ export default function SMMPage() {
                 <button
                   key={p.platform}
                   onClick={() => setSelectedPlatform(p.platform)}
-                  className={`group flex flex-col items-center gap-2 sm:gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4 text-center transition-all duration-200 hover:border-transparent hover:shadow-card-hover hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-2 ring-transparent ${colors.ring}`}
+                  className={`group flex w-full min-w-0 flex-col items-center gap-2 sm:gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4 text-center transition-all duration-200 hover:border-transparent hover:shadow-card-hover hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-2 ring-transparent ${colors.ring}`}
                 >
                   <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${colors.bg} transition-transform duration-200 group-hover:scale-110`}>
                     <PlatformIcon platform={p.platform} className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -343,7 +351,7 @@ export default function SMMPage() {
                 key={sub.sub}
                 type="button"
                 onClick={() => setSelectedSubcategory(sub.sub)}
-                className="group flex items-center gap-3 sm:gap-4 rounded-2xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4 text-left transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group flex w-full min-w-0 items-center gap-3 sm:gap-4 rounded-2xl border border-border bg-card px-4 sm:px-5 py-3 sm:py-4 text-left transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-transform duration-200 group-hover:scale-110">
                   <PlatformIcon platform={selectedPlatform} className="h-5 w-5" />
@@ -448,31 +456,67 @@ export default function SMMPage() {
 
                 <ServiceSpecs features={selectedService.features} />
 
-                <div className="rounded-lg border bg-muted/50 p-4">
+                <div className={`rounded-lg border p-4 ${
+                  hasInsufficientFunds ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-muted/50'
+                }`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Total</span>
+                    <span className="text-sm opacity-80">Total</span>
                     <span className="text-xl font-semibold tabular-nums">
                       {formatCurrency(total, selectedService.currency)}
                     </span>
                   </div>
+                  {hasInsufficientFunds && balance !== null && (
+                    <div className="mt-1 flex items-center justify-between text-xs font-medium">
+                      <span>Your balance</span>
+                      <span>{formatCurrency(balance, selectedService.currency)}</span>
+                    </div>
+                  )}
                 </div>
+
+                {hasInsufficientFunds && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-warning/30 bg-warning/8 px-4 py-3 text-xs" role="alert">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+                    <div className="flex-1 space-y-2">
+                      <p className="font-semibold text-warning">
+                        Insufficient balance — you need {formatCurrency(total - (balance ?? 0), selectedService.currency)} more
+                      </p>
+                      <p className="text-muted-foreground">Top up your wallet and come back to complete this purchase.</p>
+                      <Link
+                        href="/wallet"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                        onClick={closeOrder}
+                      >
+                        Top Up Wallet
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {!hasInsufficientFunds && apiErrorMsg && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-xs text-destructive" role="alert">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                    <span>{apiErrorMsg}</span>
+                  </div>
+                )}
               </div>
 
               <DialogFooter>
                 <Button variant="outline" onClick={closeOrder}>
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleOrder}
-                  disabled={createOrder.isPending || quantityInvalid || !!targetUrlError}
-                >
-                  {createOrder.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                  )}
-                  Place Order
-                </Button>
+                {!hasInsufficientFunds && (
+                  <Button
+                    onClick={handleOrder}
+                    disabled={createOrder.isPending || quantityInvalid || !!targetUrlError}
+                  >
+                    {createOrder.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                    )}
+                    {createOrder.isSuccess ? 'Order placed' : apiErrorMsg ? 'Try again' : 'Place Order'}
+                  </Button>
+                )}
               </DialogFooter>
             </>
           )}

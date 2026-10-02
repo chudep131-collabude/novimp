@@ -40,7 +40,7 @@ import {
   Unlink,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { cn, isSyntheticEmail } from '@/lib/utils';
 
 /* ── Types ──────────────────────────────────────────────────────── */
 
@@ -70,19 +70,7 @@ function initials(user: ProfileUser): string {
   return (a + b).toUpperCase() || user.email[0]?.toUpperCase() || '?';
 }
 
-/**
- * Returns true for auto-generated synthetic emails created by Telegram login
- * (e.g. tg_12345@telegram.local). These don't represent a real inbox so
- * email verification status is meaningless for them.
- */
-function isSyntheticEmail(email?: string | null): boolean {
-  if (!email) return true;
-  return (
-    email.endsWith('.local') ||
-    email.includes('@telegram.') ||
-    /^tg_\d+@/.test(email)
-  );
-}
+
 
 /* ── DiceBear avatar catalog ──────────────────────────────────────── */
 

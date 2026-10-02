@@ -21,7 +21,8 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { useServices, useCreateOrder, useFreeNumbers, useFreeMessages } from '@/lib/queries';
+import Link from 'next/link';
+import { useServices, useCreateOrder, useFreeNumbers, useFreeMessages, useWallet } from '@/lib/queries';
 import { formatCurrency } from '@/lib/format';
 import type { Service } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -54,6 +55,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/api';
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 
@@ -417,9 +419,22 @@ function PurchaseDialog({
   onClose: () => void;
 }) {
   const createOrder = useCreateOrder();
+  const { data: wallet } = useWallet();
+
+  // Reset mutation state each time the dialog opens for a new service
+  const prevService = useRef<string | null>(null);
+  if (service?.id !== prevService.current) {
+    prevService.current = service?.id ?? null;
+    if (createOrder.status !== 'idle') createOrder.reset();
+  }
+
+  // Pre-check: do we have enough balance before even hitting the API?
+  const price = service ? Number(service.customerPrice) : 0;
+  const balance = wallet ? Number(wallet.balance) : null;
+  const hasInsufficientFunds = balance !== null && balance < price;
 
   const handleBuy = () => {
-    if (!service || !countryCode) return;
+    if (!service || !countryCode || hasInsufficientFunds) return;
     createOrder.mutate(
       {
         serviceId: service.id,
@@ -430,8 +445,10 @@ function PurchaseDialog({
     );
   };
 
+  const apiErrorMsg = createOrder.isError ? getErrorMessage(createOrder.error) : null;
+
   return (
-    <Dialog open={!!service} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog open={!!service} onOpenChange={(open) => { if (!open) { createOrder.reset(); onClose(); } }}>
       <DialogContent>
         {service && (
           <>
@@ -462,8 +479,12 @@ function PurchaseDialog({
             </DialogHeader>
 
             <div className="space-y-4">
-              {/* Price summary */}
-              <div className="flex items-center justify-between rounded-xl bg-foreground px-5 py-4 text-background">
+              {/* Price summary — highlight shortfall in red when funds are low */}
+              <div className={`flex items-center justify-between rounded-xl px-5 py-4 ${
+                hasInsufficientFunds
+                  ? 'bg-destructive/10 text-destructive'
+                  : 'bg-foreground text-background'
+              }`}>
                 <div>
                   <p className="text-xs font-medium opacity-50">Price</p>
                   <p className="text-3xl font-bold tabular-nums tracking-tight">
@@ -471,38 +492,82 @@ function PurchaseDialog({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-medium opacity-50">Delivery</p>
-                  <p className="font-bold">{service.estimatedTime || 'Instant'}</p>
+                  {hasInsufficientFunds ? (
+                    <>
+                      <p className="text-xs font-medium opacity-50">Your balance</p>
+                      <p className="font-bold">{formatCurrency(balance!, service.currency)}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-medium opacity-50">Delivery</p>
+                      <p className="font-bold">{service.estimatedTime || 'Instant'}</p>
+                    </>
+                  )}
                 </div>
               </div>
 
               <ServiceSpecs features={service.features} />
 
-              <div className="flex items-start gap-2.5 rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-xs text-muted-foreground">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-                <span>
-                  This number is exclusively yours for the activation. The SMS code goes only to you.
-                  Funds are debited from your wallet.
-                </span>
-              </div>
+              {/* ── Insufficient funds banner ── */}
+              {hasInsufficientFunds && (
+                <div className="flex items-start gap-2.5 rounded-xl border border-warning/30 bg-warning/8 px-4 py-3 text-xs" role="alert">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+                  <div className="flex-1 space-y-2">
+                    <p className="font-semibold text-warning">
+                      Insufficient balance — you need {formatCurrency(price - (balance ?? 0), service.currency)} more
+                    </p>
+                    <p className="text-muted-foreground">Top up your wallet and come back to complete this purchase.</p>
+                    <Link
+                      href="/wallet"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                      onClick={() => { createOrder.reset(); onClose(); }}
+                    >
+                      Top Up Wallet
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* ── API error banner (post-submit) ── */}
+              {!hasInsufficientFunds && apiErrorMsg && (
+                <div className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-xs text-destructive" role="alert">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <span>{apiErrorMsg}</span>
+                </div>
+              )}
+
+              {/* ── Default safety notice ── */}
+              {!hasInsufficientFunds && !apiErrorMsg && (
+                <div className="flex items-start gap-2.5 rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-xs text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
+                  <span>
+                    This number is exclusively yours for the activation. The SMS code goes only to you.
+                    Funds are debited from your wallet.
+                  </span>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={() => { createOrder.reset(); onClose(); }}>
                 Cancel
               </Button>
-              <Button onClick={handleBuy} disabled={createOrder.isPending || createOrder.isSuccess}>
-                {createOrder.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : createOrder.isSuccess ? (
-                  <Check className="mr-2 h-4 w-4" />
-                ) : (
-                  <Lock className="mr-2 h-4 w-4" />
-                )}
-                {createOrder.isSuccess
-                  ? 'Order placed!'
-                  : `Buy for ${formatCurrency(service.customerPrice, service.currency)}`}
-              </Button>
+              {!hasInsufficientFunds && (
+                <Button onClick={handleBuy} disabled={createOrder.isPending || createOrder.isSuccess}>
+                  {createOrder.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : createOrder.isSuccess ? (
+                    <Check className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Lock className="mr-2 h-4 w-4" />
+                  )}
+                  {createOrder.isSuccess
+                    ? 'Order placed!'
+                    : apiErrorMsg
+                    ? 'Try again'
+                    : `Buy for ${formatCurrency(service.customerPrice, service.currency)}`}
+                </Button>
+              )}
             </DialogFooter>
           </>
         )}

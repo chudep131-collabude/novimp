@@ -13,8 +13,11 @@ import {
   Check,
   MapPin,
   Clock,
+  AlertTriangle,
 } from 'lucide-react';
-import { useServices, useCreateOrder, useProxyTariffs } from '@/lib/queries';
+import Link from 'next/link';
+import { useServices, useCreateOrder, useProxyTariffs, useWallet } from '@/lib/queries';
+import { getErrorMessage } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import type { Service } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -103,6 +106,7 @@ export default function ProxyPage() {
   const reduceMotion = useReducedMotion();
   const { data, isLoading, isError, error, refetch } = useServices('PROXY', 100);
   const createOrder = useCreateOrder();
+  const { data: wallet } = useWallet();
 
   const services: Service[] = data?.services ?? [];
 
@@ -223,8 +227,11 @@ export default function ProxyPage() {
     }
   }, [tariffs, duration]);
 
+  const balance = wallet ? Number(wallet.balance) : null;
+  const hasInsufficientFunds = balance !== null && balance < totalPrice;
+
   const handlePurchase = () => {
-    if (!service || !selectedCountry || !selectedTariff) return;
+    if (!service || !selectedCountry || !selectedTariff || hasInsufficientFunds) return;
     createOrder.mutate({
       serviceId: service.id,
       quantity: 1,
@@ -236,6 +243,8 @@ export default function ProxyPage() {
       },
     });
   };
+
+  const apiErrorMsg = createOrder.isError ? getErrorMessage(createOrder.error) : null;
 
   return (
     <StaggerList className="space-y-8">
@@ -511,8 +520,15 @@ export default function ProxyPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border bg-muted/20 px-4 py-4">
-                  <p className="text-xs text-muted-foreground">Total</p>
+                <div className={`rounded-xl border px-4 py-4 ${
+                  hasInsufficientFunds ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-muted/20 border-border'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs opacity-80">Total</p>
+                    {hasInsufficientFunds && balance !== null && (
+                      <p className="text-xs font-medium">Your balance: {formatCurrency(balance, tariffQuery.data?.currency)}</p>
+                    )}
+                  </div>
                   {isLoading || tariffQuery.isLoading ? (
                     <Skeleton className="mt-1 h-10 w-28" />
                   ) : (
@@ -524,7 +540,7 @@ export default function ProxyPage() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={reduceMotion ? undefined : { opacity: 0, y: -5 }}
                           transition={{ duration: 0.16 }}
-                          className="text-3xl font-bold tabular-nums tracking-tight text-foreground"
+                          className={`text-3xl font-bold tabular-nums tracking-tight ${hasInsufficientFunds ? '' : 'text-foreground'}`}
                         >
                           {formatCurrency(totalPrice, tariffQuery.data?.currency)}
                         </motion.p>
@@ -537,25 +553,52 @@ export default function ProxyPage() {
                   )}
                 </div>
 
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={handlePurchase}
-                  disabled={
-                    !service || !selectedCountry || !selectedTariff ||
-                    createOrder.isPending || isLoading ||
-                    tariffQuery.isLoading || tariffQuery.isError
-                  }
-                >
-                  {createOrder.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : createOrder.isSuccess ? (
-                    <Check className="mr-2 h-4 w-4" />
-                  ) : (
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                  )}
-                  {createOrder.isSuccess ? 'Order placed' : 'Purchase Proxy'}
-                </Button>
+                {hasInsufficientFunds && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-warning/30 bg-warning/8 px-4 py-3 text-xs" role="alert">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
+                    <div className="flex-1 space-y-2">
+                      <p className="font-semibold text-warning">
+                        Insufficient balance — you need {formatCurrency(totalPrice - (balance ?? 0), tariffQuery.data?.currency)} more
+                      </p>
+                      <p className="text-muted-foreground">Top up your wallet to complete this purchase.</p>
+                      <Link
+                        href="/wallet"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                      >
+                        Top Up Wallet
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {!hasInsufficientFunds && apiErrorMsg && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-xs text-destructive" role="alert">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                    <span>{apiErrorMsg}</span>
+                  </div>
+                )}
+
+                {!hasInsufficientFunds && (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={handlePurchase}
+                    disabled={
+                      !service || !selectedCountry || !selectedTariff ||
+                      createOrder.isPending || isLoading ||
+                      tariffQuery.isLoading || tariffQuery.isError
+                    }
+                  >
+                    {createOrder.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : createOrder.isSuccess ? (
+                      <Check className="mr-2 h-4 w-4" />
+                    ) : (
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                    )}
+                    {createOrder.isSuccess ? 'Order placed' : apiErrorMsg ? 'Try again' : 'Purchase Proxy'}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -81,7 +81,7 @@ import {
 } from '@/lib/format';
 import { humanizeStatus, orderStatusVariant, variantForStatus } from '@/lib/status';
 import type { AdminUser, AdminUserDetail, AdminOrder, UserRole, WalletAdjustmentType, Transaction } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, isSyntheticEmail } from '@/lib/utils';
 
 const PAGE_SIZE = 20;
 
@@ -560,7 +560,9 @@ function UserDetailDialog({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Email verified</p>
-                <p className="font-medium">{user.emailVerified ? 'Yes' : 'No'}</p>
+                <p className="font-medium">
+                  {isSyntheticEmail(user.email) ? 'N/A' : user.emailVerified ? 'Yes' : 'No'}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Joined</p>
