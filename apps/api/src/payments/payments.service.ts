@@ -248,17 +248,17 @@ export class PaymentsService {
   async getDepositsForAdmin(
     page = 1,
     limit = 20,
-    filters: { status?: string; requiresReview?: boolean; search?: string } = {},
+    filters: { status?: string; requiresReview?: boolean; needsReview?: boolean; search?: string } = {},
   ) {
     const where: any = {};
 
     if (filters.status) {
       where.status = filters.status;
-    } else if (filters.requiresReview !== false) {
+    } else if (!filters.needsReview) {
       // Default view: anything awaiting review.
       where.status = { in: ['PENDING', 'UNDERPAID', 'MANUAL_REVIEW'] };
     }
-    if (filters.requiresReview === true) where.requiresReview = true;
+    if (filters.needsReview === true || filters.requiresReview === true) where.requiresReview = true;
 
     // Resolve free-text search against owner email -> user ids.
     const term = filters.search?.trim();
@@ -341,6 +341,43 @@ export class PaymentsService {
       oldValue: { status: deposit.status },
       newValue: { status: 'COMPLETED', credited: creditAmount },
       reason: notes,
+    });
+
+    return { success: true };
+  }
+
+  async manualRejectDeposit(depositId: string, adminId: string, reason: string) {
+    const deposit = await this.prisma.deposit.findUnique({
+      where: { id: depositId },
+    });
+
+    if (!deposit) {
+      throw new NotFoundException('Deposit not found');
+    }
+
+    if (deposit.status !== 'PENDING' && deposit.status !== 'UNDERPAID' && deposit.status !== 'MANUAL_REVIEW') {
+      throw new BadRequestException('Deposit cannot be rejected in its current state');
+    }
+
+    await this.prisma.deposit.update({
+      where: { id: depositId },
+      data: {
+        status: 'FAILED',
+        requiresReview: false,
+        reviewedBy: adminId,
+        reviewedAt: new Date(),
+        reviewNotes: reason,
+      },
+    });
+
+    await this.audit.record({
+      userId: adminId,
+      action: 'deposit.manual_reject',
+      entityType: 'deposit',
+      entityId: deposit.id,
+      oldValue: { status: deposit.status },
+      newValue: { status: 'FAILED' },
+      reason,
     });
 
     return { success: true };

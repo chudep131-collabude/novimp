@@ -84,12 +84,24 @@ export class PaymentsController {
     @Query('limit') limit?: string,
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('needsReview') needsReview?: string,
   ) {
     return this.paymentsService.getDepositsForAdmin(
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
-      { status, search },
+      { status, search, needsReview: needsReview === 'true' ? true : undefined },
     );
+  }
+
+  @Post('admin/deposits/:id/reject')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'FINANCE')
+  @UseGuards(RolesGuard)
+  async manualReject(
+    @Param('id') depositId: string,
+    @CurrentUser('id') adminId: string,
+    @Body('reason') reason: string,
+  ) {
+    return this.paymentsService.manualRejectDeposit(depositId, adminId, reason);
   }
 
   @Post('admin/deposits/:id/approve')
