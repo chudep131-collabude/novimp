@@ -220,14 +220,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
-                  {/* Indicator line — positioned at the very top of the nav bar */}
-                  {isActive && (
-                    <motion.span
-                      layoutId="bottom-pill"
-                      transition={springSoft}
-                      className="absolute -top-px left-1/2 h-[3px] w-10 -translate-x-1/2 rounded-b-full bg-primary shadow-[0_0_8px_theme(colors.primary.DEFAULT)]"
-                    />
-                  )}
+                  {/* Absolute wrapper prevents flex shifts during animation */}
+                  <div className="absolute -top-px inset-x-0 flex justify-center">
+                    {isActive && (
+                      <motion.div
+                        layoutId="bottom-pill"
+                        transition={springSoft}
+                        className="h-[3px] w-10 rounded-b-full bg-primary shadow-[0_0_8px_theme(colors.primary.DEFAULT)]"
+                      />
+                    )}
+                  </div>
                   <motion.span
                     animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
                     transition={reduceMotion ? { duration: 0 } : springSoft}
