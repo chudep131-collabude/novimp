@@ -18,9 +18,11 @@ import { CommonModule } from './common/common.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QueueModule } from './queue/queue.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { AppController } from './app.controller';
 import { validate } from './config/env.validation';
 
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
