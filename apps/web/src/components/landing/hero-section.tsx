@@ -59,7 +59,7 @@ export function HeroSection() {
     : 'border-white/25 bg-black/25 text-white hover:bg-white/15 hover:text-white backdrop-blur-sm';
 
   return (
-    <section className="relative w-full overflow-hidden min-h-[750px] sm:min-h-[800px] lg:min-h-0">
+    <section className="relative w-full overflow-hidden h-[750px] sm:h-[800px] lg:h-[860px] bg-[#0d1117]">
 
       {/* ── Background images — cover the section, don't drive height ── */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
