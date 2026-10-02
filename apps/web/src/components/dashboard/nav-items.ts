@@ -32,15 +32,8 @@ export interface NavItem {
 
 /** Primary navigation — single source of truth for sidebar, bottom bar, and page titles. */
 export const navigation: NavItem[] = [
-  { name: 'Home',     href: '/home',    icon: House },
-  { name: 'Wallet',   href: '/wallet',  icon: CreditCard },
-  { name: 'Orders',   href: '/orders',  icon: ClipboardList },
-  { name: 'Proxy',    href: '/proxy',   icon: Network },
-  { name: 'Numbers',  href: '/numbers', icon: Smartphone },
-  { name: 'Email',    href: '/email',   icon: AtSign },
-  { name: 'Support',       href: '/support',        icon: MessageCircleQuestion },
-  { name: 'Notifications', href: '/notifications',   icon: Bell },
-  { name: 'Account',       href: '/account',         icon: CircleUser },
+  { name: 'Notifications', href: '/notifications', icon: Bell },
+  { name: 'Account', href: '/account', icon: CircleUser },
 ];
 
 /**
@@ -49,15 +42,15 @@ export const navigation: NavItem[] = [
  * only see sections they are authorised for.
  */
 export const adminNavigation: NavItem[] = [
-  { name: 'Overview',      href: '/admin',              icon: LayoutGrid,           roles: [...ADMIN_ROLES, 'FINANCE'] },
-  { name: 'Orders',        href: '/admin/orders',       icon: ClipboardList,        roles: [...ADMIN_ROLES, 'SUPPORT', 'FINANCE'] },
-  { name: 'Users',         href: '/admin/users',        icon: Users,                roles: [...ADMIN_ROLES, 'SUPPORT'] },
-  { name: 'Tickets',       href: '/admin/tickets',      icon: MessageCircleQuestion, roles: [...ADMIN_ROLES, 'SUPPORT'] },
-  { name: 'Providers',     href: '/admin/providers',    icon: Plug,                 roles: ADMIN_ROLES },
-  { name: 'Announcements', href: '/admin/announcements', icon: Megaphone,           roles: ADMIN_ROLES },
-  { name: 'Pricing',       href: '/admin/pricing',      icon: Tag,                  roles: ADMIN_ROLES },
-  { name: 'Deposits',      href: '/admin/deposits',     icon: Banknote,             roles: [...ADMIN_ROLES, 'FINANCE'] },
-  { name: 'Audit Logs',    href: '/admin/audit-logs',   icon: ShieldCheck,          roles: ADMIN_ROLES },
+  { name: 'Overview', href: '/admin', icon: LayoutGrid, roles: [...ADMIN_ROLES, 'FINANCE'] },
+  { name: 'Orders', href: '/admin/orders', icon: ClipboardList, roles: [...ADMIN_ROLES, 'SUPPORT', 'FINANCE'] },
+  { name: 'Users', href: '/admin/users', icon: Users, roles: [...ADMIN_ROLES, 'SUPPORT'] },
+  { name: 'Tickets', href: '/admin/tickets', icon: MessageCircleQuestion, roles: [...ADMIN_ROLES, 'SUPPORT'] },
+  { name: 'Providers', href: '/admin/providers', icon: Plug, roles: ADMIN_ROLES },
+  { name: 'Announcements', href: '/admin/announcements', icon: Megaphone, roles: ADMIN_ROLES },
+  { name: 'Pricing', href: '/admin/pricing', icon: Tag, roles: ADMIN_ROLES },
+  { name: 'Deposits', href: '/admin/deposits', icon: Banknote, roles: [...ADMIN_ROLES, 'FINANCE'] },
+  { name: 'Audit Logs', href: '/admin/audit-logs', icon: ShieldCheck, roles: ADMIN_ROLES },
 ];
 
 /** Filter a nav list down to entries visible for `role`. */
