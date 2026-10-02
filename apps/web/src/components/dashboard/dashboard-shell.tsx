@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { LogOut, ShieldCheck, ChevronDown, LayoutGrid, House, ClipboardList, CreditCard, CircleUser, Bell } from 'lucide-react';
+import { LogOut, ShieldCheck, ChevronDown, LayoutGrid, House, ClipboardList, CreditCard, CircleUser, Bell, ArrowLeft } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ThemeLogo } from '@/components/theme-logo';
@@ -32,11 +32,18 @@ function initials(email?: string, first?: string, last?: string) {
 const mainNav: typeof navigation = []; // No main header nav
 const accountNav = navigation; // Support, Notifications, Account
 
+/** Bottom-nav root pages — these never show a back button. */
+const ROOT_PATHS = new Set(['/home', '/orders', '/wallet', '/notifications', '/account']);
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout, isStaff } = useAuth();
   const wallet = useWallet();
   const reduceMotion = useReducedMotion();
+
+  // Show a back button on any page that's NOT a root bottom-nav destination.
+  const isSubPage = !ROOT_PATHS.has(pathname);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -191,6 +198,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             transition={{ duration: reduceMotion ? 0 : 0.15, ease: EASE_OUT }}
             className="mx-auto max-w-7xl overflow-x-hidden p-4 pb-28 lg:p-6 lg:pb-8"
           >
+            {isSubPage && (
+              <div className="mb-4">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </button>
+              </div>
+            )}
             {children}
           </motion.main>
         </AnimatePresence>
