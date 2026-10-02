@@ -463,7 +463,7 @@ export class OnlineSIMAdapter implements ProviderAdapter {
       this.DOMAIN_OVERRIDES[key] ??
       this.DOMAIN_OVERRIDES[nameKey] ??
       `${key}.com`;
-    return `https://logo.clearbit.com/${domain}`;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
   }
 
   constructor(private logger: LoggerService) {}

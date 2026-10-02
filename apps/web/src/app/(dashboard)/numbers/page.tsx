@@ -735,14 +735,7 @@ function NumbersPageInner() {
               >
                 <SelectTrigger className="w-full h-11 rounded-xl">
                   <div className="flex items-center gap-2">
-                    {freeSelectedCountry ? (
-                      <>
-                        <CountryFlag code={freeSelectedCountry} name="" className="h-4 w-6 shrink-0" />
-                        <SelectValue />
-                      </>
-                    ) : (
-                      <SelectValue placeholder="Select a country…" />
-                    )}
+                    <SelectValue placeholder="Select a country…" />
                   </div>
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -929,14 +922,7 @@ function NumbersPageInner() {
                 >
                   <SelectTrigger className="w-full h-11 rounded-xl">
                     <div className="flex items-center gap-2">
-                      {selectedCountry ? (
-                        <>
-                          <CountryFlag code={selectedCountry} name="" className="h-4 w-6 shrink-0" />
-                          <SelectValue />
-                        </>
-                      ) : (
-                        <SelectValue placeholder="Select a country…" />
-                      )}
+                      <SelectValue placeholder="Select a country…" />
                     </div>
                   </SelectTrigger>
                   <SelectContent className="max-h-72">

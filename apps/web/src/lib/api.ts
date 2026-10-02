@@ -16,14 +16,18 @@ const MAX_ERROR_MESSAGE_LENGTH = 300;
  * MAX_ERROR_MESSAGE_LENGTH characters to prevent leaking server internals.
  */
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
-  const err = error as AxiosError<{ message?: string | string[] }>;
-  const message = err?.response?.data?.message;
+  const err = error as AxiosError<{ message?: string | string[]; error?: string } | string>;
+  const data = err?.response?.data;
 
   let result: string;
-  if (Array.isArray(message)) {
-    result = message.join(', ');
-  } else if (typeof message === 'string' && message.length > 0) {
-    result = message;
+  if (data && typeof data === 'object' && 'message' in data && Array.isArray(data.message)) {
+    result = data.message.join(', ');
+  } else if (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string') {
+    result = data.message;
+  } else if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+    result = data.error;
+  } else if (typeof data === 'string' && data.length > 0) {
+    result = data;
   } else if (err?.message) {
     result = err.message;
   } else {
