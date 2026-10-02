@@ -4,6 +4,8 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 # Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -28,7 +30,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init openssl
 
 # Copy package files
 COPY package*.json ./
