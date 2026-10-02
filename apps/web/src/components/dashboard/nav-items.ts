@@ -41,7 +41,6 @@ export const navigation: NavItem[] = [
   { name: 'Email',    href: '/email',   icon: AtSign },
   { name: 'Support',       href: '/support',        icon: MessageCircleQuestion },
   { name: 'Notifications', href: '/notifications',   icon: Bell },
-  { name: 'Profile',       href: '/profile',         icon: CircleUser },
   { name: 'Account',       href: '/account',         icon: CircleUser },
 ];
 
