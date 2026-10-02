@@ -29,8 +29,8 @@ function initials(email?: string, first?: string, last?: string) {
   return email?.slice(0, 2).toUpperCase() ?? 'U';
 }
 
-const mainNav = navigation.slice(0, 7); // Home → Email
-const accountNav = navigation.slice(7); // Support, Notifications, Account
+const mainNav: typeof navigation = []; // No main header nav
+const accountNav = navigation; // Support, Notifications, Account
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
