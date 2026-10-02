@@ -197,45 +197,49 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
         {/* ── Mobile bottom nav ──────────────────────────────────────────── */}
         <nav
-          className="fixed bottom-0 left-0 right-0 z-30 flex h-[4.25rem] items-stretch border-t border-border/50 bg-card/98 backdrop-blur-md lg:hidden safe-area-inset-bottom"
+          className="fixed bottom-0 left-0 right-0 z-30 h-20 border-t border-border/50 bg-card/98 backdrop-blur-md lg:hidden"
           aria-label="Bottom navigation"
         >
-          {([
-            { name: 'Home',          href: '/home',          icon: House },
-            { name: 'Orders',        href: '/orders',        icon: ClipboardList },
-            { name: 'Wallet',        href: '/wallet',        icon: CreditCard },
-            { name: 'Notifications', href: '/notifications', icon: Bell },
-            { name: 'Account',       href: '/account',       icon: CircleUser },
-          ] as const).map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'relative flex flex-1 flex-col items-center justify-center gap-0.5 pt-1 text-[10px] font-semibold transition-colors',
-                  isActive ? 'text-primary' : 'text-muted-foreground'
-                )}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="bottom-pill"
-                    transition={springSoft}
-                    className="absolute top-0 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-primary"
-                  />
-                )}
-                <motion.span
-                  animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
-                  transition={reduceMotion ? { duration: 0 } : springSoft}
-                  className="flex h-6 w-6 items-center justify-center"
+          {/* Indicator rendered at the nav level so it's always flush to the top edge */}
+          <div className="relative flex h-full items-center">
+            {([
+              { name: 'Home',          href: '/home',          icon: House },
+              { name: 'Orders',        href: '/orders',        icon: ClipboardList },
+              { name: 'Wallet',        href: '/wallet',        icon: CreditCard },
+              { name: 'Notifications', href: '/notifications', icon: Bell },
+              { name: 'Account',       href: '/account',       icon: CircleUser },
+            ] as const).map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    'relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold transition-colors',
+                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  )}
                 >
-                  <item.icon className="h-5 w-5" />
-                </motion.span>
-                <span className="leading-none">{item.name}</span>
-              </Link>
-            );
-          })}
+                  {/* Indicator line — positioned at the very top of the nav bar */}
+                  {isActive && (
+                    <motion.span
+                      layoutId="bottom-pill"
+                      transition={springSoft}
+                      className="absolute -top-px left-1/2 h-[3px] w-10 -translate-x-1/2 rounded-b-full bg-primary shadow-[0_0_8px_theme(colors.primary.DEFAULT)]"
+                    />
+                  )}
+                  <motion.span
+                    animate={{ scale: isActive ? 1.1 : 1, y: isActive ? -1 : 0 }}
+                    transition={reduceMotion ? { duration: 0 } : springSoft}
+                    className="flex h-6 w-6 items-center justify-center"
+                  >
+                    <item.icon className="h-6 w-6" />
+                  </motion.span>
+                  <span className="leading-none">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       </div>
     </TooltipProvider>
