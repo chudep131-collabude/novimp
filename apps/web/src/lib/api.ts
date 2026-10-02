@@ -38,7 +38,7 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
-  timeout: 8000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
