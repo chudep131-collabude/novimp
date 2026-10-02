@@ -81,7 +81,7 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
   }
 
-  const port = configService.get('API_PORT', 4000);
+  const port = configService.get('PORT') || configService.get('API_PORT', 4000);
   await app.listen(port);
   logger.log(`API running on port ${port}`, 'Bootstrap');
 }
