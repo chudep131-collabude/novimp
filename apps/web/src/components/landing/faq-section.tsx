@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: 'Can I get a refund if a service doesn\'t work?',
-    a: 'Absolutely. If a virtual number receives no SMS within the validity window, or if a proxy is not functional on delivery, you can request a refund directly from your Orders dashboard.',
+    a: 'Absolutely. If a virtual number receives no SMS within the validity window, or if a proxy is not functional on delivery, the refund is automatic if the order is not completed. All refunds are credited to your account balance; we do not provide external refunds.',
   },
   {
     q: 'What platforms do your SMM services support?',
@@ -31,10 +31,7 @@ const faqs = [
     q: 'Is there a minimum deposit?',
     a: 'The minimum deposit is $5. There are no monthly fees or subscriptions  you only pay for what you order.',
   },
-  {
-    q: 'Do you offer an API?',
-    a: 'Yes. A full REST API is available for all services, making it easy to integrate orders into your own tools, scripts, or SaaS products. API documentation is accessible from your dashboard.',
-  },
+
 ];
 
 function FaqItem({ q, a }: { q: string; a: string }) {

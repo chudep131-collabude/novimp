@@ -118,4 +118,12 @@ export class OrdersController {
   ) {
     return this.ordersService.getOrder(userId, orderId);
   }
+
+  @Post(':id/cancel')
+  async cancelOrder(
+    @CurrentUser('id') userId: string,
+    @Param('id') orderId: string,
+  ) {
+    return this.ordersService.cancelOrder(userId, orderId);
+  }
 }

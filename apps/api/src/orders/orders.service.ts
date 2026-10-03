@@ -525,4 +525,38 @@ export class OrdersService {
       return this.prisma.order.findUnique({ where: { id: order.id } });
     }
   }
+
+  async cancelOrder(userId: string, orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId, userId },
+      include: { service: { include: { provider: true } } },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.status !== 'PENDING' && order.status !== 'PROCESSING') {
+      throw new BadRequestException('Order cannot be cancelled in its current state');
+    }
+
+    if (order.providerOrderId && order.service.provider) {
+      const adapter = this.adapterFactory.getAdapter(order.service.provider.adapter);
+      try {
+        const cancelled = await adapter.cancelOrder(order.providerOrderId);
+        if (!cancelled) {
+          throw new BadRequestException('Provider rejected cancellation. Service might have already started.');
+        }
+      } catch (error) {
+        if (error instanceof BadRequestException) throw error;
+        this.logger.error(`Failed to cancel order ${order.orderNumber} with provider`, error instanceof Error ? error.stack : String(error), 'OrdersService');
+        throw new BadRequestException('Failed to cancel order with provider. Service might have already started.');
+      }
+    }
+
+    return this.updateStatus(order.id, 'CANCELLED', {
+      reason: 'Cancelled by user',
+      actorId: userId,
+    });
+  }
 }

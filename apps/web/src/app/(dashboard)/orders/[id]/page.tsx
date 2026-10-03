@@ -16,7 +16,7 @@ import {
   Clock,
   MapPin,
 } from 'lucide-react';
-import { useOrderById } from '@/lib/queries';
+import { useOrderById, useCancelOrder } from '@/lib/queries';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { orderStatusVariant, variantForStatus, humanizeStatus } from '@/lib/status';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +69,7 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
 export default function OrderDetailPage({ params }: Props) {
   const { id } = use(params);
   const { data: order, isLoading, isError, error, refetch } = useOrderById(id);
+  const cancelMutation = useCancelOrder();
 
   if (isLoading) {
     return (
@@ -99,6 +100,7 @@ export default function OrderDetailPage({ params }: Props) {
   }
 
   const statusDesc = STATUS_DESCRIPTIONS[order.status] ?? '';
+  // Only show cancel if order hasn't progressed far. We allow the backend to reject if the provider says no.
   const isActive = order.status === 'PENDING' || order.status === 'PROCESSING';
   const proxyDetails = order.deliveryData;
 
@@ -113,10 +115,20 @@ export default function OrderDetailPage({ params }: Props) {
           </Link>
         </Button>
         {isActive && (
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="mr-2 h-3.5 w-3.5" />
-            Refresh status
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => cancelMutation.mutate(order.id)}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? 'Cancelling...' : 'Cancel Order'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="mr-2 h-3.5 w-3.5" />
+              Refresh status
+            </Button>
+          </div>
         )}
       </div>
 

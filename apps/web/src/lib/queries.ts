@@ -78,6 +78,30 @@ export function useOrderById(id: string | null) {
   });
 }
 
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) =>
+      api.post(`/orders/${orderId}/cancel`).then((r) => r.data),
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet'] });
+      toast({
+        title: 'Order cancelled',
+        description: 'Your order was successfully cancelled and refunded.',
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: 'Could not cancel order',
+        description: getErrorMessage(err) || 'The provider rejected the cancellation request.',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
 export function useServices(category?: string, limit?: number) {
   const { isAuthenticated } = useAuth();
   return useQuery({
